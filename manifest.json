@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Influence Flight Chart Zoom",
     "version": "1.0",
-    "permissions": ["activeTab", "scripting"],
+    "permissions": [],
     "background": {
         "service_worker": "src/background.js"
     },

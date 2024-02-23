@@ -85,12 +85,10 @@ const addTargetChartElementListeners = (targetChartElement) => {
         const target = event.target;
 
         if (!event.target || !event.target.classList) {
-            console.log('NO event', event);
             return;
         }
 
         const delta = event.deltaY || event.detail || event.wheelDelta;
-        console.log(delta);
 
         if (delta > 0) {
             globalZoomLevel *= 0.9; // Decrease zoom level on scroll down
@@ -128,12 +126,9 @@ const addTargetChartElementListeners = (targetChartElement) => {
 
 
     document.addEventListener('mousemove', function (event) {
-
-        console.log('event', event);
         const target = event.target;
 
         if (!event.target || !event.target.classList) {
-            console.log('NO event', event);
             return;
         }
 
