@@ -1,4 +1,4 @@
-
+const xpath = "//canvas[@height='365' and @width='365']/..";
 const popup = document.createElement('div');
 popup.id = 'custom-popup';
 popup.style.display = 'none';
@@ -75,6 +75,7 @@ const addTargetChartElementListeners = (targetChartElement) => {
         return;
     }
 
+    
     targetChartElement.addEventListener('mouseenter', function (event) {
         globalZoomLevel = 2; // Starting zoom level
         popup.style.display = 'block';
@@ -82,11 +83,6 @@ const addTargetChartElementListeners = (targetChartElement) => {
     });
 
     targetChartElement.addEventListener('wheel', function (event) {
-        const target = event.target;
-
-        if (!event.target || !event.target.classList) {
-            return;
-        }
 
         const delta = event.deltaY || event.detail || event.wheelDelta;
 
@@ -98,48 +94,39 @@ const addTargetChartElementListeners = (targetChartElement) => {
 
         globalZoomLevel = Math.min(Math.max(globalZoomLevel, 2), 10);
 
-        if (target.classList.contains('sc-easbae') && target.classList.contains('gyuNyl') || target.closest('.sc-easbae.gyuNyl')) {
-            popup.style.display = 'block';
-            positionPopup(event);
+        // Get the percentage position from the SVG
+        const positionSvg = [...targetChartElement.children].pop();
+        const leftPercent = parseFloat(positionSvg.style.left) / 100; // Convert percentage to a decimal
+        const topPercent = parseFloat(positionSvg.style.top) / 100; // Convert percentage to a decimal
 
-            // Get the percentage position from the SVG
-            const positionSvg = [...targetChartElement.children].pop();
-            const leftPercent = parseFloat(positionSvg.style.left) / 100; // Convert percentage to a decimal
-            const topPercent = parseFloat(positionSvg.style.top) / 100; // Convert percentage to a decimal
-
-            const zoomLevel = globalZoomLevel;
-            const canvasWidth = canvasChartElement.width;
-            const canvasHeight = canvasChartElement.height;
-
-            const canvasChart = getCanvasElementForZoom(canvasChartElement, leftPercent, topPercent, zoomLevel, canvasWidth, canvasHeight);
-            popup.innerHTML = '';
-            popup.appendChild(canvasChart);
-
-            popup.style.display = 'block';
-            positionPopup(event, popup);
-        } else {
+        if (!(leftPercent > 0 || topPercent > 0)) {
             popup.style.display = 'none';
-        }
-    });
-
-
-
-
-    document.addEventListener('mousemove', function (event) {
-        const target = event.target;
-
-        if (!event.target || !event.target.classList) {
             return;
         }
 
-        if (target.classList.contains('sc-easbae') && target.classList.contains('gyuNyl') || target.closest('.sc-easbae.gyuNyl')) {
-            popup.style.display = 'block';
-            positionPopup(event);
+        const zoomLevel = globalZoomLevel;
+        const canvasWidth = canvasChartElement.width;
+        const canvasHeight = canvasChartElement.height;
 
+        const canvasChart = getCanvasElementForZoom(canvasChartElement, leftPercent, topPercent, zoomLevel, canvasWidth, canvasHeight);
+        popup.innerHTML = '';
+        popup.appendChild(canvasChart);
+
+        popup.style.display = 'block';
+        positionPopup(event, popup);
+    });
+
+
+    document.addEventListener('mousemove', function (event) {
             // Get the percentage position from the SVG
             const positionSvg = [...targetChartElement.children].pop();
             const leftPercent = parseFloat(positionSvg.style.left) / 100; // Convert percentage to a decimal
             const topPercent = parseFloat(positionSvg.style.top) / 100; // Convert percentage to a decimal
+
+            if (!(leftPercent > 0 || topPercent > 0)) {
+                popup.style.display = 'none';
+                return;
+            }
 
             const zoomLevel = globalZoomLevel;
             const canvasWidth = canvasChartElement.width;
@@ -151,9 +138,6 @@ const addTargetChartElementListeners = (targetChartElement) => {
 
             popup.style.display = 'block';
             positionPopup(event, popup);
-        } else {
-            popup.style.display = 'none';
-        }
     });
 
     targetChartElement.addEventListener('mouseleave', function () {
@@ -162,7 +146,11 @@ const addTargetChartElementListeners = (targetChartElement) => {
 };
 
 
-const canvasWrapperSellector = '.sc-easbae.gyuNyl'
+// Function to evaluate XPath and return the first matching element
+function evaluateXPath(xpath, contextNode) {
+    const iterator = document.evaluate(xpath, contextNode || document, null, XPathResult.ANY_UNORDERED_NODE_TYPE, null);
+    return iterator.singleNodeValue;
+}
 
 // Use a MutationObserver to watch for changes in the DOM
 const observer = new MutationObserver((mutations) => {
@@ -170,21 +158,25 @@ const observer = new MutationObserver((mutations) => {
         if (!mutation.addedNodes) return;
 
         for (let i = 0; i < mutation.addedNodes.length; i++) {
-            // Check if the added node is the targetChartElement or contains it
+            // Directly check if the added node matches the XPath or its descendants do
             const node = mutation.addedNodes[i];
-            const targetChartElement = node.nodeType === 1 && node.matches(canvasWrapperSellector) ? node : node.querySelector ? node.querySelector(canvasWrapperSellector) : null;
+            // Evaluate XPath in the context of the added node if it's an element node
+            if (node.nodeType === 1) {
+                const targetChartElement = evaluateXPath(xpath, node);
 
-            if (targetChartElement) {
-                addTargetChartElementListeners(targetChartElement);
-                observer.disconnect(); // Stop observing once we've found our target element
-                return; // Exit the loop and function since the target is found
+                if (targetChartElement) {
+                    addTargetChartElementListeners(targetChartElement);
+                    observer.disconnect(); // Stop observing once we've found our target element
+                    return; // Exit the loop and function since the target is found
+                }
             }
         }
     });
 });
 
-// Configuration of the observer:
+// Configuration of the observer
 const config = { childList: true, subtree: true };
 
-// Start observing the body for added nodes
+// Start observing the document body for added nodes
 observer.observe(document.body, config);
+

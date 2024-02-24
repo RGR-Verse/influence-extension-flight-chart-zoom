@@ -3,9 +3,6 @@
     "name": "Influence Flight Chart Zoom",
     "version": "1.0",
     "permissions": [],
-    "background": {
-        "service_worker": "src/background.js"
-    },
     "action": {},
     "content_scripts": [
         {
