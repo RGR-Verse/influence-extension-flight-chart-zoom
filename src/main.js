@@ -37,16 +37,15 @@ function getCanvasElementForZoom(canvas, leftPercent, topPercent, zoomFactor, ca
 
     // Optional: Draw a visual guide in the zoom canvas
     drawCenterCircle(ctx, zoomCanvasSize);
-
     return zoomCanvas;
 }
 
 
 function drawCenterCircle(ctx, zoomCanvasSize) {
     // Drawing a circle at the center of the zoom canvas as a visual guide
-    const centerX = (zoomCanvasSize / 2) - 1;
+    const centerX = (zoomCanvasSize / 2);
     const centerY = (zoomCanvasSize / 2);
-    const radius = 4; // Circle radius
+    const radius = 2; // Circle radius
 
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
@@ -54,6 +53,12 @@ function drawCenterCircle(ctx, zoomCanvasSize) {
     ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.50)'; // Circle border color
     ctx.stroke();
+}
+
+
+function hidePopup() {
+    popup.innerHTML = '';
+    popup.style.display = 'none';
 }
 
 
@@ -75,14 +80,21 @@ const addTargetChartElementListeners = (targetChartElement) => {
         return;
     }
 
-    
+
     targetChartElement.addEventListener('mouseenter', function (event) {
         globalZoomLevel = 2; // Starting zoom level
         popup.style.display = 'block';
         positionPopup(event, popup);
     });
 
+
+
     targetChartElement.addEventListener('wheel', function (event) {
+
+        if (event.target !== canvasChartElement) {
+            hidePopup();
+            return;
+        }
 
         const delta = event.deltaY || event.detail || event.wheelDelta;
 
@@ -99,11 +111,6 @@ const addTargetChartElementListeners = (targetChartElement) => {
         const leftPercent = parseFloat(positionSvg.style.left) / 100; // Convert percentage to a decimal
         const topPercent = parseFloat(positionSvg.style.top) / 100; // Convert percentage to a decimal
 
-        if (!(leftPercent > 0 || topPercent > 0)) {
-            popup.style.display = 'none';
-            return;
-        }
-
         const zoomLevel = globalZoomLevel;
         const canvasWidth = canvasChartElement.width;
         const canvasHeight = canvasChartElement.height;
@@ -118,31 +125,30 @@ const addTargetChartElementListeners = (targetChartElement) => {
 
 
     document.addEventListener('mousemove', function (event) {
-            // Get the percentage position from the SVG
-            const positionSvg = [...targetChartElement.children].pop();
-            const leftPercent = parseFloat(positionSvg.style.left) / 100; // Convert percentage to a decimal
-            const topPercent = parseFloat(positionSvg.style.top) / 100; // Convert percentage to a decimal
+        if (event.target !== canvasChartElement) {
+            hidePopup();
+            return;
+        }
 
-            if (!(leftPercent > 0 || topPercent > 0)) {
-                popup.style.display = 'none';
-                return;
-            }
+        // Get the percentage position from the SVG
+        const positionSvg = [...targetChartElement.children].pop();
+        const leftPercent = parseFloat(positionSvg.style.left) / 100; // Convert percentage to a decimal
+        const topPercent = parseFloat(positionSvg.style.top) / 100; // Convert percentage to a decimal
 
-            const zoomLevel = globalZoomLevel;
-            const canvasWidth = canvasChartElement.width;
-            const canvasHeight = canvasChartElement.height;
+        const zoomLevel = globalZoomLevel;
+        const canvasWidth = canvasChartElement.width;
+        const canvasHeight = canvasChartElement.height;
 
-            const canvasChart = getCanvasElementForZoom(canvasChartElement, leftPercent, topPercent, zoomLevel, canvasWidth, canvasHeight);
-            popup.innerHTML = '';
-            popup.appendChild(canvasChart);
+        const canvasChart = getCanvasElementForZoom(canvasChartElement, leftPercent, topPercent, zoomLevel, canvasWidth, canvasHeight);
+        popup.innerHTML = '';
+        popup.appendChild(canvasChart);
 
-            popup.style.display = 'block';
-            positionPopup(event, popup);
+        popup.style.display = 'block';
+        positionPopup(event, popup);
     });
 
-    targetChartElement.addEventListener('mouseleave', function () {
-        popup.style.display = 'none';
-    });
+
+    targetChartElement.addEventListener('mouseleave', hidePopup);
 };
 
 
