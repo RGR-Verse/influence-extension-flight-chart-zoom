@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Influence Flight Chart Zoom",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "permissions": [],
     "content_scripts": [
       {

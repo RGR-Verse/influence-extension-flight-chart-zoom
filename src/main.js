@@ -3,10 +3,35 @@ const popup = document.createElement('div');
 popup.id = 'custom-popup';
 popup.style.display = 'none';
 let globalZoomLevel = 2; // Starting zoom level
+let isWindowFocused = true; // Flag to track window focus state
 document.body.appendChild(popup);
 
 // ========================================================================================
 // ========================================================================================
+
+
+
+// Event listener for when the window gains focus
+window.addEventListener('focus', function() {
+    console.log('Window is focused');
+    isWindowFocused = true;
+    // Run your code here or set a flag to conditionally run elsewhere
+});
+
+// Event listener for when the window loses focus
+window.addEventListener('blur', function() {
+    console.log('Window is not focused');
+    isWindowFocused = false;
+    // Optionally, pause or adjust your code based on focus state
+});
+
+
+
+// Function to evaluate XPath and return the first matching element
+function evaluateXPath(xpath, contextNode) {
+    const iterator = document.evaluate(xpath, contextNode || document, null, XPathResult.ANY_UNORDERED_NODE_TYPE, null);
+    return iterator.singleNodeValue;
+}
 
 
 // Position the popup based on mouse position
@@ -152,11 +177,7 @@ const addTargetChartElementListeners = (targetChartElement) => {
 };
 
 
-// Function to evaluate XPath and return the first matching element
-function evaluateXPath(xpath, contextNode) {
-    const iterator = document.evaluate(xpath, contextNode || document, null, XPathResult.ANY_UNORDERED_NODE_TYPE, null);
-    return iterator.singleNodeValue;
-}
+
 
 // Use a MutationObserver to watch for changes in the DOM
 const observer = new MutationObserver((mutations) => {
@@ -185,4 +206,12 @@ const config = { childList: true, subtree: true };
 
 // Start observing the document body for added nodes
 observer.observe(document.body, config);
+
+// look for map chart if it diapears and reappears (looses context and reappears in a different context)
+setInterval(() => {
+    if (isWindowFocused && (popup.style.display === 'none')) {
+        observer.observe(document.body, config);
+    }
+}, 500);
+
 
