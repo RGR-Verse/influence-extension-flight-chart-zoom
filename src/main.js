@@ -3,6 +3,8 @@ const popup = document.createElement('div');
 popup.id = 'custom-popup';
 popup.style.display = 'none';
 let globalZoomLevel = 2; // Starting zoom level
+const minZoomLevel = 1.5; // Minimum zoom level
+const maxZoomLevel = 20; // Maximum zoom level
 let isWindowFocused = true; // Flag to track window focus state
 document.body.appendChild(popup);
 
@@ -13,14 +15,12 @@ document.body.appendChild(popup);
 
 // Event listener for when the window gains focus
 window.addEventListener('focus', function() {
-    console.log('Window is focused');
     isWindowFocused = true;
     // Run your code here or set a flag to conditionally run elsewhere
 });
 
 // Event listener for when the window loses focus
 window.addEventListener('blur', function() {
-    console.log('Window is not focused');
     isWindowFocused = false;
     // Optionally, pause or adjust your code based on focus state
 });
@@ -107,7 +107,7 @@ const addTargetChartElementListeners = (targetChartElement) => {
 
 
     targetChartElement.addEventListener('mouseenter', function (event) {
-        globalZoomLevel = 2; // Starting zoom level
+        globalZoomLevel = minZoomLevel; // Starting zoom level
         popup.style.display = 'block';
         positionPopup(event, popup);
     });
@@ -124,12 +124,12 @@ const addTargetChartElementListeners = (targetChartElement) => {
         const delta = event.deltaY || event.detail || event.wheelDelta;
 
         if (delta > 0) {
-            globalZoomLevel *= 0.9; // Decrease zoom level on scroll down
+            globalZoomLevel -= 0.1; // Decrease zoom level on scroll down
         } else {
-            globalZoomLevel *= 1.1; // Increase zoom level on scroll up
+            globalZoomLevel += 0.1; // Increase zoom level on scroll up
         }
 
-        globalZoomLevel = Math.min(Math.max(globalZoomLevel, 2), 10);
+        globalZoomLevel = Math.min(Math.max(globalZoomLevel, minZoomLevel), maxZoomLevel);
 
         // Get the percentage position from the SVG
         const positionSvg = [...targetChartElement.children].pop();
